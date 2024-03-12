@@ -1,7 +1,7 @@
 Java Projekt zur praktischen Übung.
 ---
 
-Funktionen:
+_Funktionen:_
   - Datenbank Connection
   - Werte aus Datenbank auslesen
   - Login mit eigener DB und 3 Benutzern
