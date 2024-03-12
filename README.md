@@ -1,4 +1,5 @@
 Java Projekt zur praktischen Übung.
+---
 
 Funktionen:
   - Datenbank Connection
