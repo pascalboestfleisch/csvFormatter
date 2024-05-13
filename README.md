@@ -3,17 +3,11 @@ Java Projekt zur praktischen Übung.
 
 **Funktionen:**
 
-  - Datenbank Connection
-  - Werte aus Datenbank auslesen
-  - Login mit eigener DB und 3 Benutzern
-  - Ab und Zugänge buchen
-  - Werke in Datenbank einfügen (+ Ausgabe als Statements formatieren)
-  - Fixkosten in Datenbank festlegen
-    -> eventuell mit Datum oder ähnliches
-      -> Auswahlmöglichkeiten (GEZ, TuS)
-  - Gemeinsames Einkommen in Datenbank festhalten
-    -> Kindergeld etc.
+  - Werte aus CSV parsen
+  - Ab und Zugänge als Buttons, anschließend Werte als CSV formatiert
+  - CSV-Datei anlegen, bearbeiten und speichern können
+  - Gemeinsames Einkommen in CSV
   - GUI für Anwendung
   - Anzeigen von eingefügten Daten in Historie
     -> eventuell auch schon in Anwendung löschbar
-  - lokale Datenbank, später in NAS
+  - lokale Datei in einem Ordner, Zielort ist ein Ordner im NAS
