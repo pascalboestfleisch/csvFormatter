@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -17,8 +18,9 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel für Reiter
-        JTabbedPane tabbedPane = new JTabbedPane();
+        // Toolbar
+        JToolBar tbar = new JToolBar();
+        tbar.setSize(230, 20);
 
         // Panel für Dateiaktionen
         JPanel filePanel = new JPanel(new BorderLayout());
@@ -45,6 +47,19 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         buttonPanel.add(childSupportButton);
         buttonPanel.add(gezButton);
 
+        // Buttons für Toolbar
+        JButton openFileButton = new JButton("Open File");
+        openFileButton.addActionListener(this);
+        tbar.add(openFileButton);
+
+        JButton createFileButton = new JButton("Create File");
+        createFileButton.addActionListener(this);
+        tbar.add(createFileButton);
+
+        JButton saveFileButton = new JButton("Save File");
+        saveFileButton.addActionListener(this);
+        tbar.add(saveFileButton);
+
         // Action Listener für die Buttons hinzufügen
         startButton.addActionListener(this);
         stopButton.addActionListener(this);
@@ -70,28 +85,16 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         filePanel.add(filePathTextField, BorderLayout.NORTH);
         filePanel.add(buttonPanel, BorderLayout.CENTER);
         filePanel.add(fileContentTextField, BorderLayout.SOUTH);
+        add(tbar, BorderLayout.NORTH); // or any other suitable position
+        add(filePanel, BorderLayout.CENTER);
 
-        // Datei-Reiter hinzufügen
-        tabbedPane.addTab("File Actions", filePanel);
-
-        // Dateidialog-Reiter hinzufügen
-        JPanel dialogPanel = new JPanel();
-        JButton browseButton = new JButton("Browse");
-        browseButton.addActionListener(this);
-        dialogPanel.add(browseButton);
-        tabbedPane.addTab("File Dialog", dialogPanel);
-
-        // Änderungen-Reiter hinzufügen
-        tabbedPane.addTab("Changes", changesTextField);
-
-        add(tabbedPane, BorderLayout.NORTH);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         Booking booking = new Booking();
 
-        if (e.getActionCommand().equals("Browse")) {
+        if (e.getActionCommand().equals("Open File")) {
             JFileChooser fileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV und Excel-Dateien", "csv", "xls", "xlsx");
             fileChooser.setFileFilter(filter);
@@ -101,27 +104,52 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                 filePathTextField.setText(fileToMonitor.getAbsolutePath());
                 displayFileContent(fileToMonitor);
             }
-        } else if (e.getSource() == startButton) {
-            if (fileToMonitor != null) {
-                startMonitoring();
-            } else {
-                JOptionPane.showMessageDialog(null, "Bitte eine CSV oder xls-Datei auswählen");
+        } else if (e.getActionCommand().equals("Create File")) {
+            // Handle creating a new file
+            JFileChooser fileChooser = new JFileChooser();
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV Files", "csv");
+            fileChooser.setFileFilter(filter);
+
+            int returnValue = fileChooser.showSaveDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File newFile = fileChooser.getSelectedFile();
+                // Append .csv extension if not already present
+                if (!newFile.getName().endsWith(".csv")) {
+                    newFile = new File(newFile.getAbsolutePath() + ".csv");
+                }
+                try {
+                    if (newFile.createNewFile()) {
+                        JOptionPane.showMessageDialog(null, "New file created: " + newFile.getAbsolutePath());
+                        // You can now write to the new file if needed
+                    } else {
+                        JOptionPane.showMessageDialog(null, "File already exists.");
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Error creating new file.");
+                }
             }
         } else if (e.getSource() == stopButton) {
             stopMonitoring();
         } else if (e.getSource() == clearButton) {
             changesTextField.setText("");
         } else if (e.getSource() == carButton) {
-            JOptionPane.showMessageDialog(null, booking.getCar() + "€");
+            String csvFormatted = "Car," + booking.getCar() + "€\n";
+            JOptionPane.showMessageDialog(null, csvFormatted);
         } else if (e.getSource() == jointIncomeButton) {
-            JOptionPane.showMessageDialog(null, booking.getJoint_income() + "€ ohne Kindergeld\n" +
-                    booking.getBank_balance() + "€ mit 500€ Kindergeld");
+            String csvFormatted = "Joint Income," + booking.getJoint_income() + "€ ohne Kindergeld," +
+                    booking.getBank_balance() + "€ mit 500€ Kindergeld\n";
+            JOptionPane.showMessageDialog(null, csvFormatted);
         } else if (e.getSource() == childSupportButton) {
-            JOptionPane.showMessageDialog(null, booking.getChildSupport() + "€");
+            String csvFormatted = "Child Support," + booking.getChildSupport() + "€\n";
+            JOptionPane.showMessageDialog(null, csvFormatted);
         } else if (e.getSource() == gezButton) {
-            JOptionPane.showMessageDialog(null, booking.getGezTus() + "€");
+            String csvFormatted = "GEZ + TuS," + booking.getGezTus() + "€\n";
+            JOptionPane.showMessageDialog(null, csvFormatted);
         }
-    }
+        
+        }
+    
 
     private void startMonitoring() {
         if (!monitoring) {
