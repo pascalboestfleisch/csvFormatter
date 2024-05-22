@@ -1,6 +1,5 @@
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -11,12 +10,15 @@ public class HouseholdBudget extends JFrame implements ActionListener {
     private File fileToMonitor;
     private boolean monitoring;
     private long lastModified;
+    private StringBuilder accumulatedContent;
 
     public HouseholdBudget() {
         setTitle("Haushaltskasse");
         setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+        accumulatedContent = new StringBuilder();
 
         // Toolbar
         JToolBar tbar = new JToolBar();
@@ -87,12 +89,12 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         filePanel.add(fileContentTextField, BorderLayout.SOUTH);
         add(tbar, BorderLayout.NORTH); // or any other suitable position
         add(filePanel, BorderLayout.CENTER);
-
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         Booking booking = new Booking();
+        String csvFormatted = "";
 
         if (e.getActionCommand().equals("Open File")) {
             JFileChooser fileChooser = new JFileChooser();
@@ -120,7 +122,9 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                 try {
                     if (newFile.createNewFile()) {
                         JOptionPane.showMessageDialog(null, "New file created: " + newFile.getAbsolutePath());
-                        // You can now write to the new file if needed
+                        fileToMonitor = newFile;
+                        filePathTextField.setText(newFile.getAbsolutePath());
+                        accumulatedContent = new StringBuilder(); // Reset accumulated content for new file
                     } else {
                         JOptionPane.showMessageDialog(null, "File already exists.");
                     }
@@ -133,23 +137,23 @@ public class HouseholdBudget extends JFrame implements ActionListener {
             stopMonitoring();
         } else if (e.getSource() == clearButton) {
             changesTextField.setText("");
+            accumulatedContent = new StringBuilder(); // Clear accumulated content
         } else if (e.getSource() == carButton) {
-            String csvFormatted = "Car," + booking.getCar() + "€\n";
-            JOptionPane.showMessageDialog(null, csvFormatted);
+            csvFormatted = "Car;\n" + booking.getCar() + "€;";
         } else if (e.getSource() == jointIncomeButton) {
-            String csvFormatted = "Joint Income," + booking.getJoint_income() + "€ ohne Kindergeld," +
-                    booking.getBank_balance() + "€ mit 500€ Kindergeld\n";
-            JOptionPane.showMessageDialog(null, csvFormatted);
+            csvFormatted = "Joint Income;\n" + booking.getJoint_income() + "€ ohne Kindergeld;";
         } else if (e.getSource() == childSupportButton) {
-            String csvFormatted = "Child Support," + booking.getChildSupport() + "€\n";
-            JOptionPane.showMessageDialog(null, csvFormatted);
+            csvFormatted = "Child Support;\n" + booking.getChildSupport() + "€;";
         } else if (e.getSource() == gezButton) {
-            String csvFormatted = "GEZ + TuS," + booking.getGezTus() + "€\n";
-            JOptionPane.showMessageDialog(null, csvFormatted);
+            csvFormatted = "GEZ + TuS;\n" + booking.getGezTus() + "€;";
         }
-        
+
+        if (!csvFormatted.isEmpty() && fileToMonitor != null) {
+            accumulatedContent.append(csvFormatted);
+            writeFileContent(fileToMonitor, accumulatedContent.toString());
+            displayFileContent(fileToMonitor);
         }
-    
+    }
 
     private void startMonitoring() {
         if (!monitoring) {
@@ -177,6 +181,14 @@ public class HouseholdBudget extends JFrame implements ActionListener {
     private void stopMonitoring() {
         monitoring = false;
         changesTextField.setText("");
+    }
+
+    private void writeFileContent(File file, String content) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) { // Overwrite mode
+            writer.write(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void displayFileContent(File file) {
