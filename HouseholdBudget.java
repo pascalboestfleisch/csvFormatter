@@ -6,7 +6,8 @@ import java.io.*;
 
 public class HouseholdBudget extends JFrame implements ActionListener {
     private JButton startButton, stopButton, clearButton, carButton, jointIncomeButton, childSupportButton, gezButton;
-    private JTextField filePathTextField, changesTextField, fileContentTextField;
+    private JTextField filePathTextField, changesTextField;
+    private JTextArea fileContentTextArea;
     private File fileToMonitor;
     private boolean monitoring;
     private long lastModified;
@@ -80,14 +81,19 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         changesTextField.setEditable(false);
 
         // Textfeld für Dateiinhalt
-        fileContentTextField = new JTextField();
-        fileContentTextField.setEditable(false);
+        fileContentTextArea = new JTextArea();
+        fileContentTextArea.setEditable(false);
+        fileContentTextArea.setLineWrap(true);
+        fileContentTextArea.setWrapStyleWord(true);
+
+        JScrollPane scrollPane = new JScrollPane(fileContentTextArea);
+        scrollPane.setPreferredSize(new Dimension(480, 200));
 
         // Textfelder zum Panel hinzufügen
         filePanel.add(filePathTextField, BorderLayout.NORTH);
         filePanel.add(buttonPanel, BorderLayout.CENTER);
-        filePanel.add(fileContentTextField, BorderLayout.SOUTH);
-        add(tbar, BorderLayout.NORTH); // or any other suitable position
+        filePanel.add(scrollPane, BorderLayout.SOUTH);
+        add(tbar, BorderLayout.NORTH);
         add(filePanel, BorderLayout.CENTER);
     }
 
@@ -115,7 +121,6 @@ public class HouseholdBudget extends JFrame implements ActionListener {
             int returnValue = fileChooser.showSaveDialog(null);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File newFile = fileChooser.getSelectedFile();
-                // Append .csv extension if not already present
                 if (!newFile.getName().endsWith(".csv")) {
                     newFile = new File(newFile.getAbsolutePath() + ".csv");
                 }
@@ -124,7 +129,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                         JOptionPane.showMessageDialog(null, "New file created: " + newFile.getAbsolutePath());
                         fileToMonitor = newFile;
                         filePathTextField.setText(newFile.getAbsolutePath());
-                        accumulatedContent = new StringBuilder(); // Reset accumulated content for new file
+                        accumulatedContent = new StringBuilder();
                     } else {
                         JOptionPane.showMessageDialog(null, "File already exists.");
                     }
@@ -137,7 +142,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
             stopMonitoring();
         } else if (e.getSource() == clearButton) {
             changesTextField.setText("");
-            accumulatedContent = new StringBuilder(); // Clear accumulated content
+            accumulatedContent = new StringBuilder();
         } else if (e.getSource() == carButton) {
             csvFormatted = "Car;\n" + booking.getCar() + "€;";
         } else if (e.getSource() == jointIncomeButton) {
@@ -152,29 +157,6 @@ public class HouseholdBudget extends JFrame implements ActionListener {
             accumulatedContent.append(csvFormatted);
             writeFileContent(fileToMonitor, accumulatedContent.toString());
             displayFileContent(fileToMonitor);
-        }
-    }
-
-    private void startMonitoring() {
-        if (!monitoring) {
-            Thread monitorThread = new Thread(() -> {
-                try {
-                    monitoring = true;
-                    lastModified = fileToMonitor.lastModified();
-                    while (monitoring) {
-                        Thread.sleep(1000); // Check every second
-                        long newModified = fileToMonitor.lastModified();
-                        if (newModified != lastModified) {
-                            changesTextField.setText("File has been modified.");
-                            displayFileContent(fileToMonitor); // Update file content
-                            lastModified = newModified;
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-            monitorThread.start();
         }
     }
 
@@ -198,7 +180,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
             while ((line = reader.readLine()) != null) {
                 content.append(line).append("\n");
             }
-            fileContentTextField.setText(content.toString());
+            fileContentTextArea.setText(content.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
