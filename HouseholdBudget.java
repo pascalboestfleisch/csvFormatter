@@ -12,6 +12,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
     private boolean monitoring;
     private long lastModified;
     private StringBuilder accumulatedContent;
+    private boolean headersWritten;
 
     public HouseholdBudget() {
         setTitle("Haushaltskasse");
@@ -20,6 +21,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         setLayout(new BorderLayout());
 
         accumulatedContent = new StringBuilder();
+        headersWritten = false;
 
         // Toolbar
         JToolBar tbar = new JToolBar();
@@ -100,7 +102,6 @@ public class HouseholdBudget extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Booking booking = new Booking();
-        String csvFormatted = "";
 
         if (e.getActionCommand().equals("Open File")) {
             JFileChooser fileChooser = new JFileChooser();
@@ -113,7 +114,6 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                 displayFileContent(fileToMonitor);
             }
         } else if (e.getActionCommand().equals("Create File")) {
-            // Handle creating a new file
             JFileChooser fileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV Files", "csv");
             fileChooser.setFileFilter(filter);
@@ -130,6 +130,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                         fileToMonitor = newFile;
                         filePathTextField.setText(newFile.getAbsolutePath());
                         accumulatedContent = new StringBuilder();
+                        headersWritten = false;
                     } else {
                         JOptionPane.showMessageDialog(null, "File already exists.");
                     }
@@ -138,31 +139,48 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                     JOptionPane.showMessageDialog(null, "Error creating new file.");
                 }
             }
-        } else if (e.getSource() == stopButton) {
-            stopMonitoring();
+        } else if (e.getActionCommand().equals("Save File")) {
+            // TODO Logik um Dateien zu speichern
         } else if (e.getSource() == clearButton) {
             changesTextField.setText("");
             accumulatedContent = new StringBuilder();
-        } else if (e.getSource() == carButton) {
-            csvFormatted = "Car;\n" + booking.getCar() + "€;";
-        } else if (e.getSource() == jointIncomeButton) {
-            csvFormatted = "Joint Income;\n" + booking.getJoint_income() + "€ ohne Kindergeld;";
-        } else if (e.getSource() == childSupportButton) {
-            csvFormatted = "Child Support;\n" + booking.getChildSupport() + "€;";
-        } else if (e.getSource() == gezButton) {
-            csvFormatted = "GEZ + TuS;\n" + booking.getGezTus() + "€;";
-        }
+            headersWritten = false;
+        } else if (e.getSource() == carButton || e.getSource() == jointIncomeButton
+                || e.getSource() == childSupportButton || e.getSource() == gezButton) {
+            String[] headers = { "Car", "Joint Income", "Child Support", "GEZ + TuS" };
+            String[] values = { "", "", "", "" };
 
-        if (!csvFormatted.isEmpty() && fileToMonitor != null) {
-            accumulatedContent.append(csvFormatted);
-            writeFileContent(fileToMonitor, accumulatedContent.toString());
-            displayFileContent(fileToMonitor);
-        }
-    }
+            if (headersWritten) {
+                String[] existingContent = accumulatedContent.toString().split("\n");
+                if (existingContent.length > 1) {
+                    String[] currentValues = existingContent[1].split(";");
+                    for (int i = 0; i < currentValues.length; i++) {
+                        values[i] = currentValues[i];
+                    }
+                }
+            }
 
-    private void stopMonitoring() {
-        monitoring = false;
-        changesTextField.setText("");
+            if (e.getSource() == carButton) {
+                values[0] = booking.getCar() + "€";
+            } else if (e.getSource() == jointIncomeButton) {
+                values[1] = booking.getJoint_income() + "€ ohne Kindergeld";
+            } else if (e.getSource() == childSupportButton) {
+                values[2] = booking.getChildSupport() + "€";
+            } else if (e.getSource() == gezButton) {
+                values[3] = booking.getGezTus() + "€";
+            }
+
+            accumulatedContent.setLength(0);
+            accumulatedContent.append(String.join(";", headers)).append("\n");
+            accumulatedContent.append(String.join(";", values)).append("\n");
+
+            headersWritten = true;
+
+            if (fileToMonitor != null) {
+                writeFileContent(fileToMonitor, accumulatedContent.toString());
+                displayFileContent(fileToMonitor);
+            }
+        }
     }
 
     private void writeFileContent(File file, String content) {
