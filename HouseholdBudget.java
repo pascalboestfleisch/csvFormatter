@@ -9,8 +9,6 @@ public class HouseholdBudget extends JFrame implements ActionListener {
     private JTextField filePathTextField, changesTextField;
     private JTextArea fileContentTextArea;
     private File fileToMonitor;
-    private boolean monitoring;
-    private long lastModified;
     private StringBuilder accumulatedContent;
     private boolean headersWritten;
 
