@@ -4,46 +4,42 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 
-public class HouseholdBudget extends JFrame implements ActionListener {
-    private JButton startButton, stopButton, clearButton, carButton, jointIncomeButton, childSupportButton, gezButton;
+public class CsvFormatter extends JFrame implements ActionListener {
+    private JButton clearButton, carButton, jointIncomeButton, childSupportButton, gezButton;
     private JTextField filePathTextField, changesTextField;
     private JTextArea fileContentTextArea;
     private File fileToMonitor;
-    private StringBuilder accumulatedContent;
+    private StringBuilder builtContent;
     private boolean headersWritten;
 
-    public HouseholdBudget() {
-        setTitle("Haushaltskasse");
+    public CsvFormatter() {
+        setTitle("Csv Formatter");
         setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        accumulatedContent = new StringBuilder();
+        builtContent = new StringBuilder();
         headersWritten = false;
 
         // Toolbar
         JToolBar tbar = new JToolBar();
         tbar.setSize(230, 20);
 
-        // Panel für Dateiaktionen
+        // Panel for file actions
         JPanel filePanel = new JPanel(new BorderLayout());
 
-        // Panel für Buttons
+        // Panel for buttons
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new GridLayout(2, 3));
 
-        // Buttons erstellen
-        startButton = new JButton("Start Monitoring");
-        stopButton = new JButton("Stop Monitoring");
+        // create new buttons
         clearButton = new JButton("Clear");
         carButton = new JButton("Auto");
         jointIncomeButton = new JButton("Gehalt R+M");
         childSupportButton = new JButton("Kindergeld");
         gezButton = new JButton("GEZ + TuS");
 
-        // Buttons zum Panel hinzufügen
-        buttonPanel.add(startButton);
-        buttonPanel.add(stopButton);
+        // put buttons in panels
         buttonPanel.add(clearButton);
         buttonPanel.add(carButton);
         buttonPanel.add(jointIncomeButton);
@@ -63,24 +59,22 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         saveFileButton.addActionListener(this);
         tbar.add(saveFileButton);
 
-        // Action Listener für die Buttons hinzufügen
-        startButton.addActionListener(this);
-        stopButton.addActionListener(this);
+        // Action Listener for buttons
         clearButton.addActionListener(this);
         carButton.addActionListener(this);
         jointIncomeButton.addActionListener(this);
         childSupportButton.addActionListener(this);
         gezButton.addActionListener(this);
 
-        // Textfeld für Dateipfad
+        // Textfield for filepath
         filePathTextField = new JTextField();
         filePathTextField.setEditable(false);
 
-        // Textfeld für Änderungen
+        // Textfield for changes
         changesTextField = new JTextField();
         changesTextField.setEditable(false);
 
-        // Textfeld für Dateiinhalt
+        // Textfield for file content
         fileContentTextArea = new JTextArea();
         fileContentTextArea.setEditable(false);
         fileContentTextArea.setLineWrap(true);
@@ -89,7 +83,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
         JScrollPane scrollPane = new JScrollPane(fileContentTextArea);
         scrollPane.setPreferredSize(new Dimension(480, 200));
 
-        // Textfelder zum Panel hinzufügen
+        // add textfield to panels
         filePanel.add(filePathTextField, BorderLayout.NORTH);
         filePanel.add(buttonPanel, BorderLayout.CENTER);
         filePanel.add(scrollPane, BorderLayout.SOUTH);
@@ -127,7 +121,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                         JOptionPane.showMessageDialog(null, "New file created: " + newFile.getAbsolutePath());
                         fileToMonitor = newFile;
                         filePathTextField.setText(newFile.getAbsolutePath());
-                        accumulatedContent = new StringBuilder();
+                        builtContent = new StringBuilder();
                         headersWritten = false;
                     } else {
                         JOptionPane.showMessageDialog(null, "File already exists.");
@@ -138,18 +132,22 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                 }
             }
         } else if (e.getActionCommand().equals("Save File")) {
-            // TODO Logik um Dateien zu speichern
+            saveFile();
         } else if (e.getSource() == clearButton) {
             changesTextField.setText("");
-            accumulatedContent = new StringBuilder();
+            builtContent = new StringBuilder();
             headersWritten = false;
+            if (fileToMonitor != null) {
+                clearFileContent(fileToMonitor);
+                displayFileContent(fileToMonitor);
+            }
         } else if (e.getSource() == carButton || e.getSource() == jointIncomeButton
                 || e.getSource() == childSupportButton || e.getSource() == gezButton) {
             String[] headers = { "Car", "Joint Income", "Child Support", "GEZ + TuS" };
             String[] values = { "", "", "", "" };
 
             if (headersWritten) {
-                String[] existingContent = accumulatedContent.toString().split("\n");
+                String[] existingContent = builtContent.toString().split("\n");
                 if (existingContent.length > 1) {
                     String[] currentValues = existingContent[1].split(";");
                     for (int i = 0; i < currentValues.length; i++) {
@@ -168,14 +166,14 @@ public class HouseholdBudget extends JFrame implements ActionListener {
                 values[3] = booking.getGezTus() + "€";
             }
 
-            accumulatedContent.setLength(0);
-            accumulatedContent.append(String.join(";", headers)).append("\n");
-            accumulatedContent.append(String.join(";", values)).append("\n");
+            builtContent.setLength(0);
+            builtContent.append(String.join(";", headers)).append("\n");
+            builtContent.append(String.join(";", values)).append("\n");
 
             headersWritten = true;
 
             if (fileToMonitor != null) {
-                writeFileContent(fileToMonitor, accumulatedContent.toString());
+                writeFileContent(fileToMonitor, builtContent.toString());
                 displayFileContent(fileToMonitor);
             }
         }
@@ -186,6 +184,29 @@ public class HouseholdBudget extends JFrame implements ActionListener {
             writer.write(content);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void saveFile() {
+        if (fileToMonitor != null) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToMonitor))) {
+                writer.write(builtContent.toString());
+                JOptionPane.showMessageDialog(this, "File saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error saving file.");
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No file to save or content is empty.");
+        }
+    }
+
+    private void clearFileContent(File file) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(""); // Write an empty string to clear the file
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error clearing file.");
         }
     }
 
@@ -204,7 +225,7 @@ public class HouseholdBudget extends JFrame implements ActionListener {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            HouseholdBudget fileChangeMonitor = new HouseholdBudget();
+            CsvFormatter fileChangeMonitor = new CsvFormatter();
             fileChangeMonitor.setVisible(true);
         });
     }
