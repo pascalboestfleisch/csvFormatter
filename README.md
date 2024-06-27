@@ -1,13 +1,10 @@
-Java Projekt zur praktischen Übung.
+Java practice project.
 ---
 
-**Funktionen:**
+**Functions:**
 
-  - Werte aus CSV parsen
-  - Ab und Zugänge als Buttons, anschließend Werte als CSV formatiert
-  - CSV-Datei anlegen, bearbeiten und speichern können
-  - Gemeinsames Einkommen in CSV
-  - GUI für Anwendung
-  - Anzeigen von eingefügten Daten in Historie
-    -> eventuell auch schon in Anwendung löschbar
-  - lokale Datei in einem Ordner, Zielort ist ein Ordner im NAS
+  - Parse values out of csv files
+  - hard coded buttons to simplify usage
+  - values of hard coded buttons are formatted into csv
+  - being able to create, save, open and clear csv files
+  - simple GUI
